@@ -52,6 +52,16 @@ LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
 LIBS	:= -lctru -lm
 
+#----
+# Config on 3DSX.
+#----
+
+APP_TITLE = BadApple!!!
+APP_DESCRIPTION = Bad Apple using monorle!
+APP_AUTHOR = Wolfvak + Chromaryu
+
+
+
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib

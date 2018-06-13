@@ -1,10 +1,11 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <3ds.h>
 
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "monorale.h"
+#define DEBUG_INST /* minor profiling */
+#define N3DS_TEST
 
 #define DEBUG_INST /* minor profiling */
 
@@ -34,6 +35,17 @@ int main(int argc, char **argv)
 
 	gfxInit(GSP_RGB565_OES, GSP_RGB565_OES, false);
 	consoleInit(GFX_BOTTOM, NULL);
+	
+	#ifdef N3DS_TEST
+	res = ptmSysmInit();
+	printf("ptmSysmInit(): %08lX\n",res);
+	res = PTMSYSM_CheckNew3DS();
+	printf("PTMSYSM_CheckNew3DS(): %08lX\n",res);
+	if(res){
+		res = PTMSYSM_ConfigureNew3DSCPU(0x3);
+		printf("ConfigN3DSCPU(): %08lX\n",res);
+	}
+	#endif
 
 	printf("Starting...\n");
 	fread(vid_hdr, vid_sz, 1, vid);

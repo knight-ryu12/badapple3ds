@@ -57,7 +57,7 @@ LIBS	:= -lctru -lm
 #----
 
 APP_TITLE = BadApple!!!
-APP_DESCRIPTION = Bad Apple using monorle!
+APP_DESCRIPTION = Bad Apple using monorale!
 APP_AUTHOR = Wolfvak + Chromaryu
 
 

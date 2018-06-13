@@ -1,3 +1,5 @@
+/* compile with `cc -O2 monorale_encoder.c -o monorale_encoder.c` */
+
 #include <assert.h>
 #include <stdint.h>
 

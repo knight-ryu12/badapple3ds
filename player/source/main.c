@@ -32,11 +32,10 @@ int isVorbis(const char *in)
 }
 
 
-int initVorbis(char *file){
-	
+int initVorbis(){	
 	//printf("opening %s...\n",file);
 	//printf("test %s ret:%d\n",file,isVorbis(file));
-	if((f = fopen(file,"rb"))==NULL) return 1;
+	if((f = fopen("romfs:/ba.ogg","rb"))==NULL) return 1;
 	//printf("ov_test:%d",ov_test(f,&vorbisFile,NULL,0));
 	int ov_r = ov_open(f,&vorbisFile,NULL,0);
 	printf("ov_r:%d\n",ov_r);
@@ -95,7 +94,7 @@ void initSound(){
 	ndspChnReset(CHANNEL);
 	ndspChnWaveBufClear(CHANNEL);
 	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
-	ndspChnSetInterp(CHANNEL,NDSP_INTERP_POLYPHASE);
+	ndspChnSetInterp(CHANNEL,NDSP_INTERP_LINEAR);
 	ndspChnSetRate(CHANNEL,44100);
 	ndspChnSetFormat(CHANNEL,NDSP_FORMAT_STEREO_PCM16);
 	printf("InitSound Done.\n");
@@ -105,7 +104,7 @@ void initSound(){
 void soundThread(void *arg) {
 	//initSound();
 	ndspWaveBuf waveBuf[2];
-	bool lastbuf = true;
+	bool lastbuf = false;
 	int16_t* buffer1 = linearAlloc(buffSize * sizeof(int16_t));
 	int16_t* buffer2 = linearAlloc(buffSize * sizeof(int16_t));
 	printf("Buffer LM allocated\n");
@@ -120,14 +119,14 @@ void soundThread(void *arg) {
 	ndspChnWaveBufAdd(CHANNEL,&waveBuf[1]);
 	
 	while(ndspChnIsPlaying(CHANNEL) == false);
-	svcSleepThread(100*1000);
+	svcSleepThread(100*100);
 	while(runThreads){
 		//svcSleepThread(100 * 1000);
 		if(lastbuf == true && waveBuf[0].status == NDSP_WBUF_DONE && waveBuf[1].status == NDSP_WBUF_DONE) break;
 		if(lastbuf == true) continue;
 		
 		if(waveBuf[0].status == NDSP_WBUF_DONE) {
-			printf("wb0\n");
+			//printf("wb0\n");
 			size_t read = fillVorbisBuffer(&buffer1[0]);
 			if(read <= 0) {
 				lastbuf = true;
@@ -138,7 +137,7 @@ void soundThread(void *arg) {
 		}
 
 		if(waveBuf[1].status == NDSP_WBUF_DONE) {
-			printf("wb1\n");
+			//intf("wb1\n");
 			size_t read = fillVorbisBuffer(&buffer2[0]);
 			if(read <= 0)
 			{
@@ -159,7 +158,7 @@ void soundThread(void *arg) {
 	linearFree(buffer2);
 	printf("Freed buffers\n");
 	threadExit(0);
-	return;
+	//return;
 }	
 
 
@@ -167,7 +166,7 @@ void soundThread(void *arg) {
 int main(int argc, char **argv)
 {
 	Result res;
-	FILE *vid,*sound;
+	FILE *vid;
 	size_t vid_sz, frame;
 	monorale_hdr *vid_hdr;
 	Thread thr;
@@ -209,7 +208,7 @@ int main(int argc, char **argv)
 	fread(vid_hdr, vid_sz, 1, vid);
 	fclose(vid);
 	
-	initVorbis("romfs:/ba.ogg");
+	initVorbis();
 	//sound = fopen("romfs:/ba.ogg","rb");
 	//if(sound == NULL){
 	//	printf("Load Failed!");
@@ -225,7 +224,7 @@ int main(int argc, char **argv)
 	s32 prio = 0;
 	svcGetThreadPriority(&prio,CUR_THREAD_HANDLE);
 	printf("Main prio: 0x%lx\n",prio);
-	thr = threadCreate(soundThread,NULL,16384,prio-1,-2,true);
+	thr = threadCreate(soundThread,NULL,16384,prio-1,-2,false);
 	printf("Thread Created\n");
 	frame = 0;
 	while(aptMainLoop() && frame < monorale_frames(vid_hdr)) {
@@ -267,9 +266,10 @@ int main(int argc, char **argv)
 			(double)max_ticks / CPU_TICKS_PER_MSEC,
 			(double)(tot_ticks / frame) / CPU_TICKS_PER_MSEC);
 	#endif /* DEBUG_INST */
-
+	runThreads = false;
 	free(vid_hdr);
 	threadJoin(thr,U64_MAX);
+	threadFree(thr);
 	while (aptMainLoop()) {
 		gspWaitForVBlank();
 		hidScanInput();

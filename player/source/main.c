@@ -94,7 +94,7 @@ void initSound(){
 	ndspChnReset(CHANNEL);
 	ndspChnWaveBufClear(CHANNEL);
 	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
-	ndspChnSetInterp(CHANNEL,NDSP_INTERP_LINEAR);
+	ndspChnSetInterp(CHANNEL,NDSP_INTERP_POLYPHASE);
 	ndspChnSetRate(CHANNEL,44100);
 	ndspChnSetFormat(CHANNEL,NDSP_FORMAT_STEREO_PCM16);
 	printf("InitSound Done.\n");
@@ -119,7 +119,7 @@ void soundThread(void *arg) {
 	ndspChnWaveBufAdd(CHANNEL,&waveBuf[1]);
 	
 	while(ndspChnIsPlaying(CHANNEL) == false);
-	svcSleepThread(100*100);
+	svcSleepThread(100*1000);
 	while(runThreads){
 		//svcSleepThread(100 * 1000);
 		if(lastbuf == true && waveBuf[0].status == NDSP_WBUF_DONE && waveBuf[1].status == NDSP_WBUF_DONE) break;
@@ -170,6 +170,10 @@ int main(int argc, char **argv)
 	size_t vid_sz, frame;
 	monorale_hdr *vid_hdr;
 	Thread thr;
+	
+	gfxInit(GSP_RGB565_OES,GSP_RGB565_OES,false);
+	consoleInit(GFX_BOTTOM,NULL);
+	
 	#ifdef DEBUG_INST
 	u64 tot_ticks, min_ticks, max_ticks, dif_ticks;
 	#endif /* DEBUG_INST */
@@ -186,9 +190,13 @@ int main(int argc, char **argv)
 
 	vid_hdr = malloc(vid_sz);
 	if (vid_hdr == NULL) return 1;
+	printf("Wolfvak and Chromaryu presents\n");
+	printf("Bad Apple!!! PV on 3ds!\n");
+	printf("Song: Bad Apple!!! feat nomico\n");
 
-	gfxInit(GSP_RGB565_OES, GSP_RGB565_OES, false);
-	consoleInit(GFX_BOTTOM, NULL);
+	printf("wait while Initialization finishes...\n");
+	//gfxInit(GSP_RGB565_OES, GSP_RGB565_OES, false);
+	//consoleInit(GFX_BOTTOM, NULL);
 	
 	#ifdef N3DS_TEST
 	u8 model;
@@ -204,7 +212,7 @@ int main(int argc, char **argv)
 	}
 	#endif
 	
-	printf("Starting...\n");
+	//printf("Starting...\n");
 	fread(vid_hdr, vid_sz, 1, vid);
 	fclose(vid);
 	
@@ -226,10 +234,10 @@ int main(int argc, char **argv)
 	printf("Main prio: 0x%lx\n",prio);
 	thr = threadCreate(soundThread,NULL,16384,prio-1,-2,false);
 	printf("Thread Created\n");
+	printf("Starting...\n");
 	frame = 0;
 	while(aptMainLoop() && frame < monorale_frames(vid_hdr)) {
 		u16 *fb;
-
 		gspWaitForVBlank();
 
 		hidScanInput();

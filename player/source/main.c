@@ -95,7 +95,7 @@ void initSound(){
 	ndspChnWaveBufClear(CHANNEL);
 	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
 	ndspChnSetInterp(CHANNEL,NDSP_INTERP_POLYPHASE);
-	ndspChnSetRate(CHANNEL,44100);
+	ndspChnSetRate(CHANNEL,(vi->rate));
 	ndspChnSetFormat(CHANNEL,NDSP_FORMAT_STEREO_PCM16);
 	printf("InitSound Done.\n");
 }
@@ -119,7 +119,7 @@ void soundThread(void *arg) {
 	ndspChnWaveBufAdd(CHANNEL,&waveBuf[1]);
 	
 	while(ndspChnIsPlaying(CHANNEL) == false);
-	svcSleepThread(100*1000);
+	//svcSleepThread(100*1000);
 	while(runThreads){
 		svcSleepThread(100 * 100);
 		if(lastbuf == true && waveBuf[0].status == NDSP_WBUF_DONE && waveBuf[1].status == NDSP_WBUF_DONE) break;

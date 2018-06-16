@@ -11,7 +11,7 @@
 #define CHANNEL 0x08
 
 volatile bool runThreads = true;
-static const size_t buffSize = 16384;
+static const size_t buffSize = 32768;
 static OggVorbis_File vorbisFile;
 static vorbis_info *vi;
 static FILE *f;
@@ -232,7 +232,7 @@ int main(int argc, char **argv)
 	s32 prio = 0;
 	svcGetThreadPriority(&prio,CUR_THREAD_HANDLE);
 	printf("Main prio: 0x%lx\n",prio);
-	thr = threadCreate(soundThread,NULL,16384,prio-1,1,false);
+	thr = threadCreate(soundThread,NULL,16384,prio-1,-2,true);
 	printf("Thread Created\n");
 	printf("Starting...\n");
 	frame = 0;
@@ -276,8 +276,8 @@ int main(int argc, char **argv)
 	#endif /* DEBUG_INST */
 	runThreads = false;
 	free(vid_hdr);
-	threadJoin(thr,U64_MAX);
-	threadFree(thr);
+	//threadJoin(thr,U64_MAX);
+	//threadFree(thr);
 	while (aptMainLoop()) {
 		gspWaitForVBlank();
 		hidScanInput();

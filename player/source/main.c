@@ -11,7 +11,7 @@
 #define CHANNEL 0x08
 
 volatile bool runThreads = true;
-static const size_t buffSize = 32768;
+static const size_t buffSize = 16384;
 static OggVorbis_File vorbisFile;
 static vorbis_info *vi;
 static FILE *f;
@@ -121,7 +121,7 @@ void soundThread(void *arg) {
 	while(ndspChnIsPlaying(CHANNEL) == false);
 	svcSleepThread(100*1000);
 	while(runThreads){
-		//svcSleepThread(100 * 1000);
+		svcSleepThread(100 * 100);
 		if(lastbuf == true && waveBuf[0].status == NDSP_WBUF_DONE && waveBuf[1].status == NDSP_WBUF_DONE) break;
 		if(lastbuf == true) continue;
 		
@@ -232,7 +232,7 @@ int main(int argc, char **argv)
 	s32 prio = 0;
 	svcGetThreadPriority(&prio,CUR_THREAD_HANDLE);
 	printf("Main prio: 0x%lx\n",prio);
-	thr = threadCreate(soundThread,NULL,16384,prio-1,-2,false);
+	thr = threadCreate(soundThread,NULL,16384,prio-1,1,false);
 	printf("Thread Created\n");
 	printf("Starting...\n");
 	frame = 0;

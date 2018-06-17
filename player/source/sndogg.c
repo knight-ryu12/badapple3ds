@@ -80,6 +80,9 @@ void soundThread(void *arg) {
 	waveBuf[1].status = NDSP_WBUF_DONE;
 
 	while(runSound) {
+		while(runSound && !playSound)
+			svcSleepThread(10e9 / 30);
+
 		int16_t *cursamplebuf = (int16_t*)waveBuf[cur_wvbuf].data_vaddr;
 
 		waveBuf[cur_wvbuf].nsamples = fillVorbisBuffer(cursamplebuf, buffSize, vorbisFile) / 2;

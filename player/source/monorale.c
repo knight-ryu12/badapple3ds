@@ -61,6 +61,9 @@ void monoraleThread(void *arg)
 		gspWaitForVBlank();
 		gspWaitForVBlank();
 
+		while(runVideo && !playVideo)
+			svcSleepThread(10e9 / 30);
+
 		u16 *fb = (u16*)gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
 		monorale_doframe(hdr, frame, fb);
 

@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-extern volatile u32 runVideo;
+extern volatile u32 runVideo, playVideo;
 
 typedef struct {
 	uint32_t offset;

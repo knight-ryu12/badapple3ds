@@ -7,7 +7,7 @@
 #include <tremor/ivorbiscodec.h>
 #include <tremor/ivorbisfile.h>
 
-extern volatile u32 runSound;
+extern volatile u32 runSound, playSound;
 
 Result initSound(u16 sample_rate);
 

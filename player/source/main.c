@@ -5,7 +5,8 @@
 #include "monorale.h"
 #include "sndogg.h"
 
-volatile u32 runVideo, runSound;
+volatile u32 runSound, playSound;
+volatile u32 runVideo, playVideo;
 
 bool do_new_speedup(void)
 {
@@ -20,11 +21,35 @@ bool do_new_speedup(void)
 	return model;
 }
 
+void threadPlayStopHook(APT_HookType hook, void *param)
+{
+	switch(hook) {
+		case APTHOOK_ONSUSPEND:
+		case APTHOOK_ONSLEEP:
+			playSound = playVideo = 0;
+			break;
+
+		case APTHOOK_ONRESTORE:
+		case APTHOOK_ONWAKEUP:
+			playSound = playVideo = 1;
+			break;
+
+		case APTHOOK_ONEXIT:
+			runSound = playSound = 0;
+			runVideo = playVideo = 0;
+			break;
+
+		default:
+			break;
+	}
+}
+
 int main(int argc, char **argv)
 {
 	Result res;
 	s32 main_prio;
 	Thread vid_thr, snd_thr;
+	aptHookCookie thr_playhook;
 
 	OggVorbis_File vorbisFile;
 	vorbis_info *vi;
@@ -53,10 +78,12 @@ int main(int argc, char **argv)
 	svcGetThreadPriority(&main_prio, CUR_THREAD_HANDLE);
 	if (main_prio < 2) svcBreak(USERBREAK_ASSERT);
 
-	runSound = 1;
-	runVideo = 1;
-	snd_thr = threadCreate(soundThread, &vorbisFile, 32768, main_prio - 1, -2, true);
-	vid_thr = threadCreate(monoraleThread, video, 32768, main_prio - 2, -2, true);
+	aptHook(&thr_playhook, threadPlayStopHook, NULL);
+
+	runSound = playSound = 1;
+	runVideo = playVideo = 1;
+	snd_thr = threadCreate(soundThread, &vorbisFile, 32768, main_prio + 2, -2, true);
+	vid_thr = threadCreate(monoraleThread, video, 32768, main_prio + 1, -2, true);
 
 	while(aptMainLoop()) {
 		svcSleepThread(10e9 / 60);
@@ -65,15 +92,16 @@ int main(int argc, char **argv)
 			break;
 
 		hidScanInput();
-		if (hidKeysDown() & KEY_B) {
-			runSound = 0;
-			runVideo = 0;
-			break;
-		}
+		if (hidKeysDown() & KEY_START) break;
 	}
+
+	runSound = playSound = 0;
+	runVideo = playVideo = 0;
 
 	threadJoin(vid_thr, U64_MAX);
 	threadJoin(snd_thr, U64_MAX);
+
+	aptUnhook(&thr_playhook);
 
 	fclose((FILE*)(vorbisFile.datasource)); /* hack */
 	free(video);

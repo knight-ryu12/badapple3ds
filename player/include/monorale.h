@@ -2,6 +2,12 @@
 
 #include <3ds.h>
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+extern volatile u32 runVideo;
+
 typedef struct {
 	uint32_t offset;
 	uint32_t cmdcnt;
@@ -16,4 +22,5 @@ static inline size_t monorale_frames(monorale_hdr *hdr) {
 	return hdr->framecnt;
 }
 
-void monorale_doframe(monorale_hdr *hdr, size_t frame, u16 *fb);
+monorale_hdr *monorale_init(const char *path);
+void monoraleThread(void *arg);

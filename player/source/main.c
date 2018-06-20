@@ -10,14 +10,18 @@ volatile u32 runVideo, playVideo;
 
 bool do_new_speedup(void)
 {
-	Result res, model;
+	Result res;
+	u8 model;
 
 	res = ptmSysmInit();
 	if (R_FAILED(res)) return 0;
-	model = PTMSYSM_CheckNew3DS();
-	if (model == 1)
+	res = cfguInit();
+	if (R_FAILED(res)) return 0;
+	CFGU_GetSystemModel(&model);
+	if (model == 2 || model >= 4)
 		PTMSYSM_ConfigureNew3DSCPU(3);
 	ptmSysmExit();
+	cfguExit();
 	return model;
 }
 

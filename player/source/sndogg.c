@@ -78,6 +78,8 @@ void soundThread(void *arg) {
 
 	waveBuf[0].status = NDSP_WBUF_DONE;
 	waveBuf[1].status = NDSP_WBUF_DONE;
+	
+	svcSleepThread(100000); // hack
 
 	while(runSound) {
 		while(runSound && !playSound)

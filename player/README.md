@@ -1,3 +1,3 @@
-# template
+# badapple3ds-player
 
-This is a template for starting new 3DS libctru projects.
+More like monorale-playback, but for badapple3ds

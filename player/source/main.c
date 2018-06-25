@@ -5,6 +5,8 @@
 #include "monorale.h"
 #include "sndogg.h"
 
+#define DEBUG // For debug string.
+
 volatile u32 runSound, playSound;
 volatile u32 runVideo, playVideo;
 
@@ -14,7 +16,12 @@ bool do_new_speedup(void)
 	u8 model;
 
 	res = ptmSysmInit();
-	if (R_FAILED(res)) return 0;
+	if (R_FAILED(res)){ 
+		#ifdef DEBUG
+			printf("ptmSysmInit(): %08lx\n",res);
+		#endif
+		return 0;
+	}
 	res = cfguInit();
 	if (R_FAILED(res)) return 0;
 	CFGU_GetSystemModel(&model);
@@ -67,6 +74,9 @@ int main(int argc, char **argv)
 	res = romfsInit();
 	if (R_FAILED(res)) return 1;
 
+	res = aptInit();
+	if (R_FAILED(res)) return 1;
+
 	res = initVorbis("romfs:/ba.ogg", &vorbisFile, &vi);
 	if (res != 0) return 1;
 
@@ -83,12 +93,15 @@ int main(int argc, char **argv)
 	if (main_prio < 2) svcBreak(USERBREAK_ASSERT);
 
 	aptHook(&thr_playhook, threadPlayStopHook, NULL);
+	
+	res = APT_SetAppCpuTimeLimit(30);
+	printf("SetAppCpuTimeLimit(): %08lx",res);
 
 	runSound = playSound = 1;
 	runVideo = playVideo = 1;
-	snd_thr = threadCreate(soundThread, &vorbisFile, 32768, main_prio + 2, -2, true);
-	vid_thr = threadCreate(monoraleThread, video, 32768, main_prio + 1, -2, true);
-
+	snd_thr = threadCreate(soundThread, &vorbisFile, 32768, main_prio + 2, 1, true);
+	vid_thr = threadCreate(monoraleThread, video, 32768, main_prio + 1, 0, true);
+	
 	while(aptMainLoop()) {
 		svcSleepThread(10e9 / 60);
 
@@ -110,6 +123,15 @@ int main(int argc, char **argv)
 	fclose((FILE*)(vorbisFile.datasource)); /* hack */
 	free(video);
 
+	while (aptMainLoop()) {
+		gspWaitForVBlank();
+		hidScanInput();
+		if (hidKeysDown() & KEY_START)
+			break; // break in order to return to hbmenu
+	}
+
 	gfxExit();
+	romfsExit();
+	aptExit();
 	return 0;
 }

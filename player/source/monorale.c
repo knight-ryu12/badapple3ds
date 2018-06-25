@@ -2,6 +2,8 @@
 
 #include "monorale.h"
 
+#define DEBUGINST
+
 static inline u16 *monorale_frame(monorale_hdr *hdr, size_t frame)
 {
 	monorale_frameinf *info;
@@ -54,18 +56,46 @@ monorale_hdr *monorale_init(const char *path)
 
 void monoraleThread(void *arg)
 {
+
+	#ifdef DEBUGINST
+	u64 tot_ticks, min_ticks, max_ticks, dif_ticks;
+	#endif /* DEBUG_INST */
+
 	monorale_hdr *hdr = (monorale_hdr*)arg;
 	u32 frame = 0;
+	
+	u16 *fb;
 
+	#ifdef DEBUGINST
+	tot_ticks = 0;
+	min_ticks = ~0ULL;
+	max_ticks = 0;
+	#endif /* DEBUG_INST */
+
+	//printf("LFB:%08u RFB:%08u",&lfb,&rfb);
 	while(runVideo && frame < monorale_frames(hdr)) {
 		gspWaitForVBlank();
-		gspWaitForVBlank();
+		//gspWaitForVBlank();
 
 		while(runVideo && !playVideo)
-			svcSleepThread(10e9 / 30);
+			svcSleepThread(10e9 / 60);
+	
+		#ifdef DEBUGINST
+		dif_ticks = svcGetSystemTick();
+		#endif
 
-		u16 *fb = (u16*)gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
+		fb = (u16*)gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
 		monorale_doframe(hdr, frame, fb);
+		
+		#ifdef DEBUGINST
+		dif_ticks = svcGetSystemTick() - dif_ticks;
+		if(dif_ticks >= (SYSCLOCK_ARM11_NEW/1000.0)) {
+			printf("frame:%ld, over 1ms.",frame);
+		}
+		min_ticks = (dif_ticks < min_ticks) ? dif_ticks : min_ticks;
+		max_ticks = (dif_ticks > max_ticks) ? dif_ticks : max_ticks;
+		tot_ticks += dif_ticks;
+		#endif /* DEBUG_INST */
 
 		gfxFlushBuffers();
 		gfxSwapBuffers();
@@ -73,5 +103,16 @@ void monoraleThread(void *arg)
 	}
 
 	runVideo = 0;
+	#ifdef DEBUGINST
+	printf("frames = %ld, ticks = %llu, min_ticks = %llu,"
+			"max_ticks = %llu, avg_ticks = %llu\n",
+			frame, tot_ticks, min_ticks, max_ticks,
+			tot_ticks / frame);
+
+	printf("min_ticks = %f ms, max_ticks = %f ms, avg_ticks = %f ms\n",
+			(double)min_ticks / (SYSCLOCK_ARM11_NEW/1000.0),
+			(double)max_ticks / (SYSCLOCK_ARM11_NEW/1000.0),
+			(double)(tot_ticks / frame) / (SYSCLOCK_ARM11_NEW/1000.0));
+	#endif /* DEBUG_INST */	
 	threadExit(0);
 }

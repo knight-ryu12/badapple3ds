@@ -2,7 +2,7 @@
 
 #include "sndogg.h"
 
-static const size_t buffSize = 32768;
+static const size_t buffSize = 44100;
 
 Result initSound(u16 sample_rate)
 {
@@ -79,11 +79,11 @@ void soundThread(void *arg) {
 	waveBuf[0].status = NDSP_WBUF_DONE;
 	waveBuf[1].status = NDSP_WBUF_DONE;
 	
-	svcSleepThread(100000); // hack
+	//svcSleepThread(100*1000); // hack
 
 	while(runSound) {
 		while(runSound && !playSound)
-			svcSleepThread(10e9 / 30);
+			svcSleepThread(10e9 / 60);
 
 		int16_t *cursamplebuf = (int16_t*)waveBuf[cur_wvbuf].data_vaddr;
 

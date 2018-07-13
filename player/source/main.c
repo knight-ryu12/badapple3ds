@@ -69,33 +69,55 @@ int main(int argc, char **argv)
 	gfxInit(GSP_RGB565_OES, GSP_RGB565_OES, false);
 	consoleInit(GFX_BOTTOM, NULL);
 
-	printf("ConfigN3DSCPU(): %08X\n\n\n", do_new_speedup());
+	//printf("ConfigN3DSCPU(): %08X\n\n\n", do_new_speedup());
 
-	res = romfsInit();
-	if (R_FAILED(res)) return 1;
-
-	res = aptInit();
-	if (R_FAILED(res)) return 1;
-
-	res = initVorbis("romfs:/ba.ogg", &vorbisFile, &vi);
-	if (res != 0) return 1;
-
-	video = monorale_init("romfs:/monorale.bin");
-	if (video == NULL) return 1;
-
-	initSound(vi->rate);
 
 	printf("Wolfvak and Chromaryu present:\n");
 	printf("Bad Apple!!! PV on 3ds!\n");
 	printf("Song: Bad Apple!!! feat nomico\n");
 
+	res = romfsInit();
+	if (R_FAILED(res)) {
+		printf("Error at romfsInit()!???\n");
+		goto end;
+	}
+	printf("romfsInit(): %08lx\n",res);
+	
+	res = aptInit();
+	if (R_FAILED(res)) {
+		printf("Error at aptInit()!? res:%08lx\n",res);
+		goto end;
+	}
+	printf("aptInit(): %08lx\n",res);
+
+	res = initVorbis("romfs:/ba.ogg", &vorbisFile, &vi);
+	if (res != 0) {
+		printf("Error at initVorbis()!?\n");
+		goto end;
+	}
+	printf("initVorbis()\n");
+
+	video = monorale_init("romfs:/monorale.bin");
+	if (video == NULL) {
+		printf("Error at monorale_init()!?\n");
+		goto end;
+	}
+	printf("monorale_init()\n");
+
+	initSound(vi->rate);
+	printf("initSound()\n");
+
+
 	svcGetThreadPriority(&main_prio, CUR_THREAD_HANDLE);
+	printf("mainThreadPrio = 0x%lx\n",main_prio);
 	if (main_prio < 2) svcBreak(USERBREAK_ASSERT);
 
 	aptHook(&thr_playhook, threadPlayStopHook, NULL);
 	
+	printf("aptHook() called\n");
+
 	res = APT_SetAppCpuTimeLimit(30);
-	printf("SetAppCpuTimeLimit(): %08lx",res);
+	printf("SetAppCpuTimeLimit(): %08lx\n",res);
 
 	runSound = playSound = 1;
 	runVideo = playVideo = 1;
@@ -123,6 +145,7 @@ int main(int argc, char **argv)
 	fclose((FILE*)(vorbisFile.datasource)); /* hack */
 	free(video);
 
+	end:
 	while (aptMainLoop()) {
 		gspWaitForVBlank();
 		hidScanInput();

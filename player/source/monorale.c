@@ -2,8 +2,6 @@
 
 #include "monorale.h"
 
-#define DEBUGINST
-
 static inline u16 *monorale_frame(monorale_hdr *hdr, size_t frame)
 {
 	monorale_frameinf *info;
@@ -56,7 +54,7 @@ monorale_hdr *monorale_init(const char *path)
 
 void monoraleThread(void *arg)
 {
-
+	printf("Hello from video thread!\n");
 	#ifdef DEBUGINST
 	u64 tot_ticks, min_ticks, max_ticks, dif_ticks;
 	#endif /* DEBUG_INST */

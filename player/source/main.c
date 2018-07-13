@@ -146,6 +146,7 @@ int main(int argc, char **argv)
 	free(video);
 
 	end:
+	printf("Press start to exit...\n");
 	while (aptMainLoop()) {
 		gspWaitForVBlank();
 		hidScanInput();

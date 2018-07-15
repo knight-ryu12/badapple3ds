@@ -72,20 +72,21 @@ int main(int argc, char **argv)
 	//printf("ConfigN3DSCPU(): %08X\n\n\n", do_new_speedup());
 
 
-	printf("Wolfvak and Chromaryu present:\n");
-	printf("Bad Apple!!! PV on 3ds!\n");
+	printf("\e[0;33mWolfvak\e[0;37m and \e[0;34mChromaryu\e[0;37m presents:\n");
+	printf("\e[0;90mBad \e[0;37mApple!!! PV on 3ds!\n");
 	printf("Song: Bad Apple!!! feat nomico\n");
 
 	res = romfsInit();
 	if (R_FAILED(res)) {
-		printf("Error at romfsInit()!???\n");
-		goto end;
+		printf("Error at romfsInit()!? res:%08lx\n",res); // Throwing Error
+		goto end; // Goto end (wait for input)
 	}
+
 	printf("romfsInit(): %08lx\n",res);
-	
 	res = aptInit();
+
 	if (R_FAILED(res)) {
-		printf("Error at aptInit()!? res:%08lx\n",res);
+		printf("Error at aptInit()!? res:%08lx\n",res); 
 		goto end;
 	}
 	printf("aptInit(): %08lx\n",res);
@@ -95,18 +96,18 @@ int main(int argc, char **argv)
 		printf("Error at initVorbis()!?\n");
 		goto end;
 	}
-	printf("initVorbis()\n");
-
+	printf("[\e[0;32mSUCCESS\e[0;37m] initVorbis()\n");
 	video = monorale_init("romfs:/monorale.bin");
+	
 	if (video == NULL) {
 		printf("Error at monorale_init()!?\n");
 		goto end;
 	}
-	printf("monorale_init()\n");
+
+	printf("[\e[0;32mSUCCESS\e[0;37m]monorale_init()\n");
 
 	initSound(vi->rate);
-	printf("initSound()\n");
-
+	printf("[\e[0;32mSUCCESS\e[0;37m]initSound()\n");
 
 	svcGetThreadPriority(&main_prio, CUR_THREAD_HANDLE);
 	printf("mainThreadPrio = 0x%lx\n",main_prio);

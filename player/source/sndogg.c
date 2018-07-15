@@ -66,7 +66,7 @@ size_t fillVorbisBuffer(int16_t *buf, size_t samples, OggVorbis_File *vorbisFile
 
 void soundThread(void *arg) {
 	
-	printf("Hello from soundThread!\n");
+	printf("Hello from sound thread!\n");
 
 	OggVorbis_File *vorbisFile = (OggVorbis_File*)arg;
 	ndspWaveBuf waveBuf[2];

@@ -9,8 +9,8 @@
 
 volatile u32 runSound, playSound;
 volatile u32 runVideo, playVideo;
-
-bool do_new_speedup(void)
+volatile u32 frame = 0;
+void do_new_speedup(void)
 {
 	Result res;
 	u8 model;
@@ -20,16 +20,18 @@ bool do_new_speedup(void)
 		#ifdef DEBUG
 			printf("ptmSysmInit(): %08lx\n",res);
 		#endif
-		return 0;
+		return;
 	}
 	res = cfguInit();
-	if (R_FAILED(res)) return 0;
+	if (R_FAILED(res)) return;
 	CFGU_GetSystemModel(&model);
-	if (model == 2 || model >= 4)
+	if (model == 2 || model >= 4) {
 		PTMSYSM_ConfigureNew3DSCPU(3);
+		printf("Using 804MHz mode.\n");
+	}
 	ptmSysmExit();
 	cfguExit();
-	return model;
+	return;
 }
 
 void threadPlayStopHook(APT_HookType hook, void *param)
@@ -70,7 +72,8 @@ int main(int argc, char **argv)
 	consoleInit(GFX_BOTTOM, NULL);
 
 	//printf("ConfigN3DSCPU(): %08X\n\n\n", do_new_speedup());
-
+	
+	do_new_speedup();
 
 	printf("\e[0;33mWolfvak\e[0;37m and \e[0;34mChromaryu\e[0;37m presents:\n");
 	printf("\e[0;90mBad \e[0;37mApple!!! PV on 3ds!\n");
@@ -96,7 +99,7 @@ int main(int argc, char **argv)
 		printf("Error at initVorbis()!?\n");
 		goto end;
 	}
-	printf("[\e[0;32mSUCCESS\e[0;37m] initVorbis()\n");
+	printf("[\e[0;32mSUCCESS\e[0;37m]initVorbis()\n");
 	video = monorale_init("romfs:/monorale.bin");
 	
 	if (video == NULL) {
@@ -126,15 +129,15 @@ int main(int argc, char **argv)
 	vid_thr = threadCreate(monoraleThread, video, 32768, main_prio + 1, 0, true);
 	
 	while(aptMainLoop()) {
-		svcSleepThread(10e9 / 60);
-
+		//svcSleepThread(10e9 / 60);
+		printf("%ld/%ld\r",frame,video->framecnt);
 		if ((runSound | runVideo) == 0)
 			break;
 
 		hidScanInput();
 		if (hidKeysDown() & KEY_START) break;
 	}
-
+	printf("\n");
 	runSound = playSound = 0;
 	runVideo = playVideo = 0;
 

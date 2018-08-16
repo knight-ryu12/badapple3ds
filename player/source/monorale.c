@@ -2,6 +2,8 @@
 
 #include "monorale.h"
 
+extern volatile u32 frame;
+
 static inline u16 *monorale_frame(monorale_hdr *hdr, size_t frame)
 {
 	monorale_frameinf *info;
@@ -54,13 +56,13 @@ monorale_hdr *monorale_init(const char *path)
 
 void monoraleThread(void *arg)
 {
-	printf("Hello from video thread!\n");
+	//printf("Hello from video thread!\n");
 	#ifdef DEBUGINST
 	u64 tot_ticks, min_ticks, max_ticks, dif_ticks;
 	#endif /* DEBUG_INST */
 
 	monorale_hdr *hdr = (monorale_hdr*)arg;
-	u32 frame = 0;
+	//u32 frame = 0;
 	
 	u16 *fb;
 
@@ -87,8 +89,8 @@ void monoraleThread(void *arg)
 		
 		#ifdef DEBUGINST
 		dif_ticks = svcGetSystemTick() - dif_ticks;
-		if(dif_ticks >= (SYSCLOCK_ARM11_NEW/1000.0)) {
-			printf("frame:%ld, over 1ms.",frame);
+		if(dif_ticks >= (SYSCLOCK_ARM11_NEW/1000.0/2.0)) {
+			printf("frame:%ld, over 0.5ms.",frame);
 		}
 		min_ticks = (dif_ticks < min_ticks) ? dif_ticks : min_ticks;
 		max_ticks = (dif_ticks > max_ticks) ? dif_ticks : max_ticks;

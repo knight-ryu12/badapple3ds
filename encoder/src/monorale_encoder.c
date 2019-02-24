@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+#include <getopt.h>
 
 #define GREY_THRESHOLD	(33808) /* grey */
 
@@ -41,16 +43,35 @@ static inline uint32_t monorle_framecnt(monorle_hdr *hdr, size_t frame)
 	return hdr->inf[frame].cmdcnt;
 } **/
 
-int main(int argc, char *argv[])
-{
+const struct option longOptions[] = {
+    /* clang-format off */
+	{ "help",      no_argument,       NULL, 'h', },
+	{ "output",    required_argument, NULL, 'o', },
+	{ "version",   no_argument,       NULL, 'v', },
+    /* clang-format on */
+};
+
+void printUsage(void) {
+	printf("Monorale encoder, by Wolfvak and Chromaryu.\n");
+	printf("Monorale encoder encodes rgb565 video files into monorale and outputs as monorale.bin.\n");
+	printf("Usage: monorale_encoder(.exe) <Options> <Input>\n");
+	printf("Options:\n");
+	for(int optIndex = 0; optIndex < sizeof(longOptions) / sizeof(struct option); optIndex++){
+		printf("  -%c, --%s, %s\n", longOptions[optIndex].val, longOptions[optIndex].name,
+			 longOptions[optIndex].has_arg == no_argument ? "" :
+				 longOptions[optIndex].has_arg == required_argument ? "<arg> (required)" : "<arg> (optional)");
+	}
+}
+
+int encode_monorle(const char* input, const char* output) {
 	size_t vidsz, framecnt, hdr_sz;
 	monorle_hdr *hdr;
 	FILE *vid, *out;
 
-	assert(argc == 2);
-
-	vid = fopen(argv[1], "rb");
-	out = fopen("out.bin", "wb+");
+	assert(input);
+	assert(output);
+	vid = fopen(input, "rb");
+	out = fopen(output, "wb+");
 	uint16_t *vidbuf = malloc(SCREEN_SZ * 2);
 	assert(vid != NULL && out != NULL && vidbuf != NULL);
 
@@ -125,6 +146,57 @@ int main(int argc, char *argv[])
 	free(hdr);
 	free(vidbuf);
 	printf("\n");
+}
 
+int main(int argc, char *argv[])
+{
+	int argi = 1;
+	int argci;
+	char *outputPath = NULL;
+
+	if(argc == 1){
+		/* no arguments */
+		printUsage();
+		return EXIT_SUCCESS;
+	}
+	else{
+		// parse options
+		int c;
+		while ((c = getopt_long(argc, argv, "ho:v:", longOptions, NULL)) != -1)
+		{
+			switch (c) {
+				case 'h':
+					// show help
+					printUsage();
+					return EXIT_SUCCESS;
+
+				case 'o':
+					// set output path option
+					outputPath = optarg;
+					continue;
+
+				case 'v':
+					// print version
+					//printVersion();
+					return EXIT_SUCCESS;
+			}
+		}
+	}
+
+	if (optind >= argc)
+	{
+		printf("No input file provided\n");
+		return EXIT_FAILURE;
+	}
+
+	if (outputPath == NULL) {
+		printf("No output file provided\n");
+		return EXIT_FAILURE;
+	}
+
+	/* input files */
+	while(optind < argc) {
+		encode_monorle(argv[optind++], outputPath);
+	}
 	return 0;
 }

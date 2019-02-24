@@ -5,7 +5,7 @@ CXXFLAGS := $(CFLAGS)
 .PHONY: all clean
 all: monorale_encoder
 
-monorale_encoder: monorale_encoder.c
+monorale_encoder: src/monorale_encoder.c
 	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
